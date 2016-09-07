@@ -18,7 +18,7 @@ function civicrm_api3_address_Migrate($params) {
   $createCount = 0;
   $logCount = 0;
   $logger = new CRM_Migratie_Logger($entity);
-  $daoSource = CRM_Core_DAO::executeQuery('SELECT * FROM domus_address WHERE is_processed = 0 ORDER BY contact_id');
+  $daoSource = CRM_Core_DAO::executeQuery('SELECT * FROM domus_address WHERE is_processed = 0 ORDER BY contact_id LIMIT 2500');
   while ($daoSource->fetch()) {
     $civiAddress = new CRM_Migratie_Address($entity, $daoSource, $logger);
     $newAddress = $civiAddress->migrate();

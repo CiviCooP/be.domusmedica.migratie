@@ -79,7 +79,7 @@ class CRM_Migratie_Phone extends CRM_Migratie_Domus {
       } catch (CiviCRM_API3_Exception $ex) {
         $this->_logger->logMessage('Error', 'Error retrieving phone_type_id from CiviCRM for phone with contact_id '
           . $this->_sourceData['contact_id'] . ' and phone_type_id' . $this->_sourceData['phone_type_id']
-          . ', phone ignored. Error from API LocationType getcount : ' . $ex->getMessage());
+          . ', phone ignored. Error from API OptionValue getcount : ' . $ex->getMessage());
         return FALSE;
       }
     }

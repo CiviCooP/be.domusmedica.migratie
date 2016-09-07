@@ -18,7 +18,7 @@ function civicrm_api3_contact_Migrate($params) {
   $createCount = 0;
   $logCount = 0;
   $logger = new CRM_Migratie_Logger($entity);
-  $daoSource = CRM_Core_DAO::executeQuery('SELECT * FROM domus_contact WHERE is_processed = 0 ORDER BY id');
+  $daoSource = CRM_Core_DAO::executeQuery('SELECT * FROM domus_contact WHERE is_processed = 0 ORDER BY id LIMIT 2500');
   while ($daoSource->fetch()) {
     $civiContact = new CRM_Migratie_Contact($entity, $daoSource, $logger);
     $newContact = $civiContact->migrate();

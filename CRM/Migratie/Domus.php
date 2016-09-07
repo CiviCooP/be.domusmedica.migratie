@@ -22,7 +22,7 @@ abstract class CRM_Migratie_Domus {
    * @param object $logger
    * @throws Exception when entity invalid
    */
-  public function __construct($entity, $sourceData, $logger) {
+  public function __construct($entity, $sourceData = NULL, $logger = NULL) {
     $entity = strtolower($entity);
     if (!$this->entityCanBeMigrated($entity)) {
       throw new Exception('Entity '.$entity.' can not be migrated.');
@@ -58,7 +58,7 @@ abstract class CRM_Migratie_Domus {
    * @access private
    */
   private function entityCanBeMigrated($entity) {
-    $validEntities = array('address', 'contact', 'email', 'entity_tag', 'note', 'phone');
+    $validEntities = array('address', 'contact', 'email', 'entity_tag', 'note', 'phone', 'relationship', 'membership');
     if (!in_array($entity, $validEntities)) {
       return FALSE;
     } else {
@@ -146,6 +146,68 @@ abstract class CRM_Migratie_Domus {
           .' with contact_id '. $this->_sourceData['contact_id'] . ' and location_type_id' 
           . $this->_sourceData['location_type_id']
           . ', ignored. Error from API LocationType getcount : ' . $ex->getMessage());
+        return FALSE;
+      }
+    }
+    return TRUE;
+  }
+
+  /**
+   * Method to check if membership type is valid
+   *
+   * @return bool
+   * @access protected
+   */
+  protected function validMembershipType() {
+    if (!isset($this->_sourceData['membership_type_id'])) {
+      $this->_logger->logMessage('Error', $this->_entity.' of contact_id '.$this->_sourceData['contact_id']
+        .'has no membership_type_id, not migrated');
+      return FALSE;
+    } else {
+      try {
+        $count = civicrm_api3('MembershipType', 'getcount', array('id' => $this->_sourceData['membership_type_id']));
+        if ($count != 1) {
+          $this->_logger->logMessage('Error', $this->_entity.' with contact_id ' . $this->_sourceData['contact_id']
+            . ' does not have a valid membership_type_id (' . $count . ' of ' . $this->_sourceData['membership_type_id']
+            . 'found), not migrated');
+          return FALSE;
+        }
+      } catch (CiviCRM_API3_Exception $ex) {
+        $this->_logger->logMessage('Error', 'Error retrieving membership type id from CiviCRM for '.$this->_entity
+          .' with contact_id '. $this->_sourceData['contact_id'] . ' and membership_type_id'
+          . $this->_sourceData['membership_type_id']
+          . ', ignored. Error from API MembershipType getcount : ' . $ex->getMessage());
+        return FALSE;
+      }
+    }
+    return TRUE;
+  }
+
+  /**
+   * Method to check if membership status is valid
+   *
+   * @return bool
+   * @access protected
+   */
+  protected function validMembershipStatus() {
+    if (!isset($this->_sourceData['status_id'])) {
+      $this->_logger->logMessage('Error', $this->_entity.' of contact_id '.$this->_sourceData['contact_id']
+        .'has no status_id, not migrated');
+      return FALSE;
+    } else {
+      try {
+        $count = civicrm_api3('MembershipStatus', 'getcount', array('id' => $this->_sourceData['status_id']));
+        if ($count != 1) {
+          $this->_logger->logMessage('Error', $this->_entity.' with contact_id ' . $this->_sourceData['contact_id']
+            . ' does not have a valid status_id (' . $count . ' of ' . $this->_sourceData['status_id']
+            . 'found), not migrated');
+          return FALSE;
+        }
+      } catch (CiviCRM_API3_Exception $ex) {
+        $this->_logger->logMessage('Error', 'Error retrieving status_id from CiviCRM for '.$this->_entity
+          .' with contact_id '. $this->_sourceData['contact_id'] . ' and status_id'
+          . $this->_sourceData['status_id']
+          . ', ignored. Error from API MembershipStatus getcount : ' . $ex->getMessage());
         return FALSE;
       }
     }
