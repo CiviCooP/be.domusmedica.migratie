@@ -24,10 +24,10 @@ class CRM_Migratie_Membership extends CRM_Migratie_Domus {
         $membership = $this->getCreatedMembership();
         $membershipLog = new CRM_Migratie_MembershipLog();
         $membershipLog->addMembership($membership);
-        $contribution = new CRM_Migratie_Contribution();
-        $contributionId = $contribution->addMembership($membership);
-        $membershipPayment = new CRM_Migratie_MembershipPayment();
-        $membershipPayment->addMembership($membership->id, $contributionId);
+        //$contribution = new CRM_Migratie_Contribution();
+        //$contributionId = $contribution->addMembership($membership);
+        //$membershipPayment = new CRM_Migratie_MembershipPayment();
+        //$membershipPayment->addMembership($membership->id, $contributionId);
         $this->addCustomData($membership->id, $membership->contact_id);
         return TRUE;
       } catch (Exception $ex) {
@@ -56,11 +56,6 @@ class CRM_Migratie_Membership extends CRM_Migratie_Domus {
       $customClauses[] = 'authorization_dd = %2';
       $customParams[2] = array($customData->authorization_dd, 'Integer');
       $index = 2;
-      if (!empty($customData->latest_update)) {
-        $index++;
-        $customClauses[] = 'latest_update = %'.$index;
-        $customParams[$index] = array($customData->latest_update, 'String');
-      }
       if (!empty($customData->note)) {
         $index++;
         $customClauses[] = 'note = %'.$index;

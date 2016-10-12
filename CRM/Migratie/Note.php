@@ -47,7 +47,7 @@ class CRM_Migratie_Note extends CRM_Migratie_Domus {
     $this->_insertClauses[] = 'note = %3';
     $this->_insertParams[3] = array($this->_sourceData['note'], 'String');
     $this->_insertClauses[] = 'modified_date = %4';
-    $this->_insertParams[4] = array(date('Y-m-d'), 'Date');
+    $this->_insertParams[4] = array(date('Y-m-d'), 'String');
     $this->_insertClauses[] = 'subject = %5';
     $this->_insertParams[5] = array('Opmerking uit Access Database', 'String');
     $this->_insertClauses[] = 'privacy = %6';

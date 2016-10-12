@@ -17,21 +17,21 @@ class CRM_Migratie_Contact extends CRM_Migratie_Domus {
   public function migrate() {
     if ($this->validSourceData()) {
       if (!$this->contactExists($this->_sourceData['id'])) {
-        if (!$this->externalIdExists($this->_sourceData['external_identifier'])) {
-          // set insert clauses and params
-          $this->setClausesAndParams();
-          $insertQuery = 'INSERT INTO civicrm_contact SET ' . implode(', ', $this->_insertClauses);
-          try {
-            CRM_Core_DAO::executeQuery($insertQuery, $this->_insertParams);
-            $this->addCustomData();
-            return TRUE;
-          } catch (Exception $ex) {
-            $this->_logger->logMessage('Error', 'Error from CRM_Core_DAO::executeQuery, could not insert contact with data '
-              . implode('; ', $this->_sourceData) . ', not migrated. Error message : ' . $ex->getMessage());
-          }
+        // no longer required, see <https://civicoop.plan.io/issues/485>
+        //if (!$this->externalIdExists($this->_sourceData['external_identifier'])) {
+        // set insert clauses and params
+        $this->setClausesAndParams();
+        $insertQuery = 'INSERT INTO civicrm_contact SET ' . implode(', ', $this->_insertClauses);
+        try {
+          CRM_Core_DAO::executeQuery($insertQuery, $this->_insertParams);
+          $this->addCustomData();
+          return TRUE;
+        } catch (Exception $ex) {
+          $this->_logger->logMessage('Error', 'Error from CRM_Core_DAO::executeQuery, could not insert contact with data '
+            . implode('; ', $this->_sourceData) . ', not migrated. Error message : ' . $ex->getMessage());
         }
       } else {
-        $this->_logger->logMessage('Error', 'Contact '.$this->_sourceData['id'].' with riziv id '.$this->_sourceData['external_identifier']
+        $this->_logger->logMessage('Error', 'Contact '.$this->_sourceData['id'].' with contact id '.$this->_sourceData['id']
           .' already exists, not migrated.');
       }
     }
@@ -72,9 +72,9 @@ class CRM_Migratie_Contact extends CRM_Migratie_Domus {
       $this->_logger->logMessage('Error', 'Contact has no contact_id, not migrated. Source data is '.implode(';', $this->_sourceData));
       return FALSE;
     }
-    if (isset($this->_sourceData['external_identifier'])) {
-      $this->_sourceData['external_identifier'] = trim($this->_sourceData['external_identifier']);
-    }
+    //if (isset($this->_sourceData['external_identifier'])) {
+      //$this->_sourceData['external_identifier'] = trim($this->_sourceData['external_identifier']);
+    //}
     return TRUE;
   }
 
@@ -95,6 +95,7 @@ class CRM_Migratie_Contact extends CRM_Migratie_Domus {
       }
     }
     unset($this->_sourceData['external_identifier']);
+    $this->_logger->logMessage('Error', 'External Identifier already exists, contact can not be migrated. Source data is '.implode(';', $this->_sourceData));
     return FALSE;
   }
 
@@ -132,6 +133,10 @@ class CRM_Migratie_Contact extends CRM_Migratie_Domus {
     if (!empty($sourceData->graduation_year)) {
       $clauses[] = 'graduation_year = %3';
       $params[3] = array($sourceData->graduation_year, 'Integer');
+    }
+    if (!empty($sourceData->riziv_id)) {
+      $clauses[] = 'riziv_id = %4';
+      $params[4] = array($sourceData->riziv_id, 'String');
     }
     $query = "INSERT INTO civicrm_value_physician_data SET ".implode(',', $clauses);
     CRM_Core_DAO::executeQuery($query, $params);
