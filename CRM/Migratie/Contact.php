@@ -119,6 +119,14 @@ class CRM_Migratie_Contact extends CRM_Migratie_Domus {
     if ($bvbaData->fetch()) {
       $this->migrateBvba($bvbaData);
     }
+    // check if contact in kring data and if so, insert
+    $kringQuery = 'SELECT * FROM domus_value_kring_data WHERE entity_id = %1';
+    $kringData = CRM_Core_DAO::executeQuery($kringQuery,
+      array(1 => array($this->_sourceData['id'], 'Integer')));
+    if ($kringData->fetch()) {
+      $this->migrateKring($kringData);
+    }
+
   }
 
   /**
@@ -166,6 +174,42 @@ class CRM_Migratie_Contact extends CRM_Migratie_Domus {
       $params[2] = array($sourceData->bvba_name, 'String');
     }
     $query = "INSERT INTO civicrm_value_bvba_data SET ".implode(',', $clauses);
+    CRM_Core_DAO::executeQuery($query, $params);
+  }
+
+  /**
+   * Method to migrate kring data in civicrm custom table
+   *
+   * @param object $sourceData
+   * @access private
+   */
+  private function migrateKring($sourceData) {
+    $clauses = array();
+    $params = array();
+    $clauses[] = 'entity_id = %1';
+    $params[1] = array($sourceData->entity_id, 'Integer');
+    $i = 1;
+    if (!empty($sourceData->contact_person)) {
+      $i++;
+      $clauses[] = 'contact_person = %'.$i;
+      $params[$i] = array($sourceData->contact_person, 'String');
+    }
+    if (!empty($sourceData->gemeenten)) {
+      $i++;
+      $clauses[] = 'gemeenten = %'.$i;
+      $params[$i] = array($sourceData->gemeenten, 'String');
+    }
+    if (!empty($sourceData->erkenning_id)) {
+      $i++;
+      $clauses[] = 'erkenning_id = %'.$i;
+      $params[$i] = array($sourceData->erkenning_id, 'String');
+    }
+    if (!empty($sourceData->account_number)) {
+      $i++;
+      $clauses[] = 'account_number = %'.$i;
+      $params[$i] = array($sourceData->account_number, 'String');
+    }
+    $query = "INSERT INTO civicrm_value_kring_data SET ".implode(',', $clauses);
     CRM_Core_DAO::executeQuery($query, $params);
   }
 }

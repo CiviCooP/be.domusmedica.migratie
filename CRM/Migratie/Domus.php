@@ -58,7 +58,7 @@ abstract class CRM_Migratie_Domus {
    * @access private
    */
   private function entityCanBeMigrated($entity) {
-    $validEntities = array('address', 'contact', 'email', 'entity_tag', 'note', 'phone', 'relationship', 'membership');
+    $validEntities = array('address', 'contact', 'email', 'entity_tag', 'note', 'phone', 'relationship', 'membership', 'website');
     if (!in_array($entity, $validEntities)) {
       return FALSE;
     } else {
