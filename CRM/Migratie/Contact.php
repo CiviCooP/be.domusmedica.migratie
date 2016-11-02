@@ -112,7 +112,15 @@ class CRM_Migratie_Contact extends CRM_Migratie_Domus {
     if ($physicianData->fetch()) {
       $this->migratePhysician($physicianData);
     }
+    // check if contact appear in bvba data and if so, insert
+    $bvbaQuery = 'SELECT * FROM domus_value_bvba_data WHERE entity_id = %1';
+    $bvbaData = CRM_Core_DAO::executeQuery($bvbaQuery,
+      array(1 => array($this->_sourceData['id'], 'Integer')));
+    if ($bvbaData->fetch()) {
+      $this->migrateBvba($bvbaData);
+    }
   }
+
   /**
    * Method to migrate physician data in civicrm custom table
    *
@@ -139,6 +147,25 @@ class CRM_Migratie_Contact extends CRM_Migratie_Domus {
       $params[4] = array($sourceData->riziv_id, 'String');
     }
     $query = "INSERT INTO civicrm_value_physician_data SET ".implode(',', $clauses);
+    CRM_Core_DAO::executeQuery($query, $params);
+  }
+
+  /**
+   * Method to migrate bvba data in civicrm custom table
+   *
+   * @param object $sourceData
+   * @access private
+   */
+  private function migrateBvba($sourceData) {
+    $clauses = array();
+    $params = array();
+    $clauses[] = 'entity_id = %1';
+    $params[1] = array($sourceData->entity_id, 'Integer');
+    $clauses[] = 'bvba_name = %2';
+    if (!empty($sourceData->bvba_name)) {
+      $params[2] = array($sourceData->bvba_name, 'String');
+    }
+    $query = "INSERT INTO civicrm_value_bvba_data SET ".implode(',', $clauses);
     CRM_Core_DAO::executeQuery($query, $params);
   }
 }
