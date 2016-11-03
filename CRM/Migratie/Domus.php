@@ -95,9 +95,6 @@ abstract class CRM_Migratie_Domus {
       );
       $countPrimary = CRM_Core_DAO::singleValueQuery($countQuery, $countParams);
       if ($countPrimary > 0) {
-        $this->_logger->logMessage('Warning', $this->_entity.'  for contact ' .
-          $this->_sourceData['contact_id'] . ' was Excellent in source but could not be primary in CiviCRM 
-          because there is another primary '.$this->_entity.' already. Migrated as non-primary');
         $this->_sourceData['is_primary'] = 0;
       }
     }

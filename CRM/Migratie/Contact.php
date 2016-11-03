@@ -27,8 +27,12 @@ class CRM_Migratie_Contact extends CRM_Migratie_Domus {
           $this->addCustomData();
           return TRUE;
         } catch (Exception $ex) {
-          $this->_logger->logMessage('Error', 'Error from CRM_Core_DAO::executeQuery, could not insert contact with data '
-            . implode('; ', $this->_sourceData) . ', not migrated. Error message : ' . $ex->getMessage());
+          $this->_logger->logMessage('Error', 'Error from CRM_Core_DAO::executeQuery, could not insert contact with data :');
+          $this->_logger->logMessage('Xtra', 'Query is '.$insertQuery.' with params :');
+          foreach ($this->_insertParams as $insertParamKey => $insertParam) {
+            $this->_logger->logMessage('Xtra', 'Param '.$insertParamKey.' consists of '.$insertParam[0].' and '.$insertParam[1]);
+          }
+          $this->_logger->logMessage('Xtra', 'Exception message : '.$ex->getMessage());
         }
       } else {
         $this->_logger->logMessage('Error', 'Contact '.$this->_sourceData['id'].' with contact id '.$this->_sourceData['id']
@@ -49,14 +53,17 @@ class CRM_Migratie_Contact extends CRM_Migratie_Domus {
     foreach ($this->_sourceData as $key => $value) {
       if (!empty($value)) {
         $index++;
-        $this->_insertClauses[] = $key.' = %'.$index;
-        if (in_array($key, $integerColumns)) {
-          $this->_insertParams[$index] = array($value, 'Integer');
-        } else {
-          if ($key == 'contact_sub_type') {
-            $value = CRM_Core_DAO::VALUE_SEPARATOR.$value.CRM_Core_DAO::VALUE_SEPARATOR;
+        // do NOT migrate external_identifier as this is not unique in domus source data
+        if ($key != 'external_identifier') {
+          $this->_insertClauses[] = $key . ' = %' . $index;
+          if (in_array($key, $integerColumns)) {
+            $this->_insertParams[$index] = array($value, 'Integer');
+          } else {
+            if ($key == 'contact_sub_type') {
+              $value = CRM_Core_DAO::VALUE_SEPARATOR . $value . CRM_Core_DAO::VALUE_SEPARATOR;
+            }
+            $this->_insertParams[$index] = array($value, 'String');
           }
-          $this->_insertParams[$index] = array($value, 'String');
         }
       }
     }
@@ -187,6 +194,7 @@ class CRM_Migratie_Contact extends CRM_Migratie_Domus {
     $clauses = array();
     $params = array();
     $clauses[] = 'entity_id = %1';
+    $gemeenten = $this->generateGemeentenForContact($sourceData);
     $params[1] = array($sourceData->entity_id, 'Integer');
     $i = 1;
     if (!empty($sourceData->contact_person)) {
@@ -194,10 +202,10 @@ class CRM_Migratie_Contact extends CRM_Migratie_Domus {
       $clauses[] = 'contact_person = %'.$i;
       $params[$i] = array($sourceData->contact_person, 'String');
     }
-    if (!empty($sourceData->gemeenten)) {
+    if (!empty($gemeenten)) {
       $i++;
       $clauses[] = 'gemeenten = %'.$i;
-      $params[$i] = array($sourceData->gemeenten, 'String');
+      $params[$i] = array($gemeenten, 'String');
     }
     if (!empty($sourceData->erkenning_id)) {
       $i++;
@@ -211,5 +219,35 @@ class CRM_Migratie_Contact extends CRM_Migratie_Domus {
     }
     $query = "INSERT INTO civicrm_value_kring_data SET ".implode(',', $clauses);
     CRM_Core_DAO::executeQuery($query, $params);
+  }
+
+  /**
+   * Method to fill gemeenten with correct values from option group
+   *
+   * @param $sourceData
+   * @return null|string
+   */
+  private function generateGemeentenForContact($sourceData) {
+    $resultString = NULL;
+    if (!empty($sourceData->gemeenten)) {
+      $result = array();
+      $gemeentenArray = explode(', ', $sourceData->gemeenten);
+      foreach ($gemeentenArray as $sourceGemeente) {
+        try {
+          $gemeenteValue = civicrm_api3('OptionValue', 'getvalue', array(
+            'option_group_id' => 'gemeenten',
+            'name' => $sourceGemeente,
+            'return' => 'value'
+          ));
+          $result[] = $gemeenteValue;
+        } catch (CiviCRM_API3_Exception $ex) {
+          $this->_logger->logMessage('Warning', 'Gemeente uit Access is '.$sourceGemeente
+            .', geen overeenkomstige waarde gevonden in de CiviCRM option group. Gemeente overgeslagen voor CiviCRM contact '
+            .$sourceData->entity_id);
+        }
+      }
+      $resultString = implode(CRM_Core_DAO::VALUE_SEPARATOR, $result);
+    }
+    return $resultString;
   }
 }
