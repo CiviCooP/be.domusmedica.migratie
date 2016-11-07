@@ -11,7 +11,7 @@
  * @date Oct 2016
  * @license AGPL-3.0
  */
-function civicrm_api3_kringdb_Migrate($params) {
+function civicrm_api3_kring_db_Migrate($params) {
   set_time_limit(0);
   $returnValues = array();
   $kringRow = new CRM_Migratie_KringDb();

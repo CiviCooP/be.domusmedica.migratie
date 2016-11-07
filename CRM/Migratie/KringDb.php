@@ -33,8 +33,8 @@ class CRM_Migratie_KringDb {
     $this->setAllJobTitles();
     // set relationship type id for kring lid
     $this->_kringLidRelationshipTypeId = civicrm_api3('RelationshipType', 'getvalue', array(
-      'name_a_b' => 'is lid van kring',
-      'name_b_a' => 'kringlid is',
+      'name_a_b' => 'is lid van',
+      'name_b_a' => 'heeft als lid',
       'return' => 'id'));
     // set custom group table name for kring lid data
     $this->_kringLidCustomTable = civicrm_api3('CustomGroup', 'getvalue', array(
@@ -44,11 +44,11 @@ class CRM_Migratie_KringDb {
     $this->_customJobTitleColumn = $jobTitleCustomField['column_name'];
     // set custom group table name for physician data
     $this->_physicianCustomTable = civicrm_api3('CustomGroup', 'getvalue', array(
-      'name' => 'physician_data',
+      'name' => 'Over_de_arts',
       'return' => 'table_name'));
     // set custom field column name for riziv id field in physician data
     $this->_customRizivColumn = civicrm_api3('CustomField', 'getvalue', array(
-      'custom_group_id' => 'physician_data',
+      'custom_group_id' => 'Over_de_arts',
       'name' => 'riziv_id',
       'return' => 'column_name'));
     // set correspondentie locaiton type id
@@ -97,8 +97,9 @@ class CRM_Migratie_KringDb {
    */
   private function retrieveDbRow($dao) {
     $result = array();
-    $elements = array('naam', 'voornaam', 'Geslacht', 'email', 'mobile', 'ORG-naam', 'Functienaam');
+    $elements = array('naam', 'voornaam', 'Geslacht', 'email', 'mobile', 'ORG_naam', 'Functienaam');
     foreach ($elements as $element) {
+
       $result[$element] = $dao->$element;
     }
     $result['riziv_id'] = $this->cleanRiziv($dao->rizvnr);
@@ -306,7 +307,8 @@ class CRM_Migratie_KringDb {
       $relationshipId = civicrm_api3('Relationship', 'getvalue', array(
         'contact_id_a' => $this->_kringData['contact_id'],
         'contact_id_b' => $this->_kringData['kring_id'],
-        'relationship_type_id' => $this->_kringLidRelationshipTypeId
+        'relationship_type_id' => $this->_kringLidRelationshipTypeId,
+        'return' => 'id'
       ));
       $this->addJobTitle($relationshipId);
       return TRUE;
@@ -330,7 +332,7 @@ class CRM_Migratie_KringDb {
           $createdRelationship = civicrm_api3('Relationship', 'create', $relationshipParams);
           $this->addJobTitle($createdRelationship['id']);
         } catch (CiviCRM_API3_Exception $ex) {
-          $this->_logger->logMessage('Error', 'Unable to create realtionship between contact id'.$this->_kringData['contact_id']
+          $this->_logger->logMessage('Error', 'Unable to create relationship between contact id'.$this->_kringData['contact_id']
             . ' and kring contact '.$this->_kringData['kring_id']);
         }
       }
@@ -343,7 +345,7 @@ class CRM_Migratie_KringDb {
    * @param $relationshipId
    */
   private function addJobTitle($relationshipId) {
-    if (!empty($this->_kringData['Functienaam'])) {
+    if (!empty($this->_kringData['Functienaam']) && strtolower($this->_kringData['Functienaam']) != "geen") {
       // first retrieve value of job title from civicrm_option_value
       try {
         $newJobTitleValue = civicrm_api3('OptionValue', 'getvalue', array(
@@ -354,7 +356,17 @@ class CRM_Migratie_KringDb {
         $existingSql = 'SELECT ' . $this->_customJobTitleColumn . ' FROM ' . $this->_kringLidCustomTable . ' WHERE entity_id = %1';
         $existingJobTitles = CRM_Core_DAO::singleValueQuery($existingSql, array(1 => array($relationshipId, 'Integer')));
         if ($existingJobTitles) {
-          $newJobTitles = $existingJobTitles . $newJobTitleValue . CRM_Core_DAO::VALUE_SEPARATOR;
+          $jobTitles = array();
+          $existingParts = explode(CRM_Core_DAO::VALUE_SEPARATOR, $existingJobTitles);
+          foreach ($existingParts as $existingPart) {
+            if (!empty($existingPart)) {
+              $jobTitles[] = $existingPart;
+            }
+          }
+          if (!in_array($newJobTitleValue, $jobTitles)) {
+            $jobTitles[] = $newJobTitleValue;
+          }
+          $newJobTitles = CRM_Core_DAO::VALUE_SEPARATOR.implode(CRM_Core_DAO::VALUE_SEPARATOR, $jobTitles).CRM_Core_DAO::VALUE_SEPARATOR;
           $sql = 'UPDATE '.$this->_kringLidCustomTable.' SET '.$this->_customJobTitleColumn.' = %1 WHERE entity_id = %2';
         } else {
           $newJobTitles = CRM_Core_DAO::VALUE_SEPARATOR.$newJobTitleValue.CRM_Core_DAO::VALUE_SEPARATOR;
