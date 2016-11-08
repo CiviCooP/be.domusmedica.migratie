@@ -18,7 +18,7 @@ function civicrm_api3_note_Migrate($params) {
   $createCount = 0;
   $logCount = 0;
   $logger = new CRM_Migratie_Logger($entity);
-  $daoSource = CRM_Core_DAO::executeQuery('SELECT * FROM domus_note WHERE is_processed = 0 ORDER BY entity_id LIMIT 2500');
+  $daoSource = CRM_Core_DAO::executeQuery('SELECT * FROM domus_note WHERE is_processed = 0 ORDER BY entity_id LIMIT 1000');
   while ($daoSource->fetch()) {
     $civiNote = new CRM_Migratie_Note($entity, $daoSource, $logger);
     $newNote = $civiNote->migrate();

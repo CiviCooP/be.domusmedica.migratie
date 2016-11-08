@@ -18,7 +18,7 @@ function civicrm_api3_email_Migrate($params) {
   $createCount = 0;
   $logCount = 0;
   $logger = new CRM_Migratie_Logger($entity);
-  $daoSource = CRM_Core_DAO::executeQuery('SELECT * FROM domus_email WHERE is_processed = 0 ORDER BY contact_id LIMIT 2500');
+  $daoSource = CRM_Core_DAO::executeQuery('SELECT * FROM domus_email WHERE is_processed = 0 ORDER BY contact_id LIMIT 1000');
   while ($daoSource->fetch()) {
     $civiEmail = new CRM_Migratie_Email($entity, $daoSource, $logger);
     $newEmail = $civiEmail->migrate();

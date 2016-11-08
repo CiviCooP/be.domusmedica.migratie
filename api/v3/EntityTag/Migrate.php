@@ -18,7 +18,7 @@ function civicrm_api3_entity_tag_Migrate($params) {
   $createCount = 0;
   $logCount = 0;
   $logger = new CRM_Migratie_Logger($entity);
-  $daoSource = CRM_Core_DAO::executeQuery('SELECT * FROM domus_entity_tag WHERE is_processed = 0 ORDER BY entity_id');
+  $daoSource = CRM_Core_DAO::executeQuery('SELECT * FROM domus_entity_tag WHERE is_processed = 0 ORDER BY entity_id LIMIT 1000');
   while ($daoSource->fetch()) {
     $civiEntityTag = new CRM_Migratie_EntityTag($entity, $daoSource, $logger);
     $newEntityTag = $civiEntityTag->migrate();

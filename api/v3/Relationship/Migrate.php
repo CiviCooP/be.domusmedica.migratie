@@ -18,7 +18,7 @@ function civicrm_api3_relationship_Migrate($params) {
   $createCount = 0;
   $logCount = 0;
   $logger = new CRM_Migratie_Logger($entity);
-  $daoSource = CRM_Core_DAO::executeQuery('SELECT * FROM domus_relationship WHERE is_processed = 0 LIMIT 2500');
+  $daoSource = CRM_Core_DAO::executeQuery('SELECT * FROM domus_relationship WHERE is_processed = 0 LIMIT 1000');
   while ($daoSource->fetch()) {
     $civiRelationship = new CRM_Migratie_Relationship($entity, $daoSource, $logger);
     $newRelationship = $civiRelationship->migrate();
