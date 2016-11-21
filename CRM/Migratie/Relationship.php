@@ -50,6 +50,10 @@ class CRM_Migratie_Relationship extends CRM_Migratie_Domus {
     $this->_insertParams[5] = array($this->_sourceData['is_permission_a_b'], 'Integer');
     $this->_insertClauses[] = 'is_permission_b_a = %6';
     $this->_insertParams[6] = array($this->_sourceData['is_permission_b_a'], 'Integer');
+    if (!empty($this->_sourceData['end_date'])) {
+      $this->_insertClauses[] = 'end_date = %7';
+      $this->_insertParams[7] = array($this->_sourceData['end_date'], 'String');
+    }
   }
 
   /**

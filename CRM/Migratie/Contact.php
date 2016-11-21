@@ -59,10 +59,14 @@ class CRM_Migratie_Contact extends CRM_Migratie_Domus {
           if (in_array($key, $integerColumns)) {
             $this->_insertParams[$index] = array($value, 'Integer');
           } else {
-            if ($key == 'contact_sub_type') {
-              $value = CRM_Core_DAO::VALUE_SEPARATOR . $value . CRM_Core_DAO::VALUE_SEPARATOR;
+            if ($key == 'birth_date') {
+              $this->_insertParams[$index] = array(date('Y-m-d', strtotime($value)), 'String');
+            } else {
+              if ($key == 'contact_sub_type') {
+                $value = CRM_Core_DAO::VALUE_SEPARATOR . $value . CRM_Core_DAO::VALUE_SEPARATOR;
+              }
+              $this->_insertParams[$index] = array($value, 'String');
             }
-            $this->_insertParams[$index] = array($value, 'String');
           }
         }
       }
@@ -160,6 +164,18 @@ class CRM_Migratie_Contact extends CRM_Migratie_Domus {
     if (!empty($sourceData->riziv_id)) {
       $clauses[] = 'riziv_id = %4';
       $params[4] = array($sourceData->riziv_id, 'String');
+    }
+    $clauses[] = 'haio = %5';
+    if (empty($sourceData->haio)) {
+      $params[5] = array(0, 'Integer');
+    } else {
+      $params[5] = array($sourceData->haio, 'Integer');
+    }
+    $clauses[] = 'retired = %6';
+    if (empty($sourceData->retired)) {
+      $params[6] = array(0, 'Integer');
+    } else {
+      $params[6] = array($sourceData->retired, 'Integer');
     }
     $query = "INSERT INTO civicrm_value_physician_data SET ".implode(',', $clauses);
     CRM_Core_DAO::executeQuery($query, $params);
